@@ -64,4 +64,4 @@ jobs:
 
       # Optional: rollout status
       - name: Wait for rollout
-        run: kubectl rollout status deploy/fastapi-deployment -n fastapi
+        run: kubectl rollout status deploy/agentgraph-deployment -n agentgraph
