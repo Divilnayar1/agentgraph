@@ -23,9 +23,24 @@ spec:
           env:
             - name: PORT
               value: "7860"
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openai-secret
+                  key: OPENAI_API_KEY
+            - name: TAVILY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: tavily-secret
+                  key: TAVILY_API_KEY
+            - name: LANGCHAIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: langchain-secret
+                  key: LANGCHAIN_API_KEY
           livenessProbe:
             httpGet:
-              path: /  # Gradio usually responds at root
+              path: /   # Gradio usually responds at root
               port: 7860
             initialDelaySeconds: 15
             periodSeconds: 20
