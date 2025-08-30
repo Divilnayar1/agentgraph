@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: agentgraph-svc
+  namespace: agentgraph
+spec:
+  type: LoadBalancer
+  selector:
+    app: agentgraph
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080

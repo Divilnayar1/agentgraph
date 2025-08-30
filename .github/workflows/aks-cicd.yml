@@ -1,0 +1,67 @@
+name: Build & Deploy to AKS
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: {}
+
+env:
+  IMAGE_NAME: agentgraph
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Log in to Azure using the service principal JSON from secrets
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Build image and push to ACR
+      - name: Set image tag
+        id: vars
+        run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: ACR Login
+        uses: azure/docker-login@v2
+        with:
+          login-server: ${{ secrets.ACR_LOGIN_SERVER }}     # e.g. fastapiacrabc.azurecr.io
+          username: ${{ secrets.ACR_USERNAME }}            # optional if ACR admin enabled; otherwise omit
+          password: ${{ secrets.ACR_PASSWORD }}            # optional if ACR admin enabled; otherwise omit
+
+      - name: Build & Push
+        run: |
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.TAG }} .
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.TAG }}
+
+      # Set kubectl context for AKS
+      - name: Set AKS context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ${{ secrets.AKS_RESOURCE_GROUP }}
+          cluster-name: ${{ secrets.AKS_CLUSTER_NAME }}
+
+      # Create namespace (idempotent)
+      - name: Create namespace
+        run: kubectl apply -f k8s/namespace.yaml
+
+      # Deploy manifests with the new image tag
+      - name: Deploy
+        run: |
+          export IMAGE_TAG=${{ steps.vars.outputs.TAG }}
+          export ACR_LOGIN_SERVER=${{ secrets.ACR_LOGIN_SERVER }}
+          # Replace placeholders and apply
+          sed "s|<ACR_LOGIN_SERVER>|$ACR_LOGIN_SERVER|g; s|\${IMAGE_TAG}|$IMAGE_TAG|g" k8s/deployment.yaml | kubectl apply -f -
+          kubectl apply -f k8s/service.yaml
+
+      # Optional: rollout status
+      - name: Wait for rollout
+        run: kubectl rollout status deploy/fastapi-deployment -n fastapi
