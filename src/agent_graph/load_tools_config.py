@@ -11,7 +11,7 @@ class LoadToolsConfig:
     def __init__(self) -> None:
         with open(here("configs/tools_config.yml")) as cfg:
             app_config = yaml.load(cfg, Loader=yaml.FullLoader)
-
+        print("helloman")
         # Set environment variables
         os.environ['OPENAI_API_KEY'] = os.getenv("OPEN_AI_API_KEY")
         os.environ['TAVILY_API_KEY'] = os.getenv("TAVILY_API_KEY")
