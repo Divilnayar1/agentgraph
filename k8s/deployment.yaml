@@ -24,20 +24,13 @@ spec:
             - name: PORT
               value: "7860"
             - name: OPENAI_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: openai-secret
-                  key: OPENAI_API_KEY
+              value: "${OPENAI_API_KEY}"
             - name: TAVILY_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: tavily-secret
-                  key: TAVILY_API_KEY
+              value: "${TAVILY_API_KEY}"
             - name: LANGCHAIN_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: langchain-secret
-                  key: LANGCHAIN_API_KEY
+              value: "${LANGCHAIN_API_KEY}"
+
+
           livenessProbe:
             httpGet:
               path: /   # Gradio usually responds at root
