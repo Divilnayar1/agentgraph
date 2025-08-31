@@ -110,7 +110,12 @@ class PrepareVectorDB:
 
 if __name__ == "__main__":
     load_dotenv()
-    os.environ['OPENAI_API_KEY'] = os.getenv("OPEN_AI_API_KEY")
+
+    openai_key = os.getenv("OPENAI_API_KEY")
+    if not openai_key:
+        raise ValueError("OPENAI_API_KEY environment variable is not set")
+    os.environ['OPENAI_API_KEY'] = openai_key
+    #os.environ['OPENAI_API_KEY'] = os.getenv("OPEN_AI_API_KEY")
 
     # from pathlib import Path
 

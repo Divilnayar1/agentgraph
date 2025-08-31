@@ -14,8 +14,20 @@ class LoadToolsConfig:
         print("helloman")
         # Set environment variables
         print(os.getenv("OPEN_AI_API_KEY"))
-        os.environ['OPENAI_API_KEY'] = os.getenv("OPEN_AI_API_KEY")
-        os.environ['TAVILY_API_KEY'] = os.getenv("TAVILY_API_KEY")
+
+        
+        openai_key = os.getenv("OPENAI_API_KEY")
+        if not openai_key:
+            raise ValueError("OPENAI_API_KEY environment variable is not set")
+        os.environ['OPENAI_API_KEY'] = openai_key
+
+        tavily_key = os.getenv("OPENAI_API_KEY")
+        if not tavily_key:
+            raise ValueError("OPENAI_API_KEY environment variable is not set")
+        os.environ['TAVILY_API_KEY'] = tavily_key
+
+        #os.environ['OPENAI_API_KEY'] = os.getenv("OPEN_AI_API_KEY")
+        #os.environ['TAVILY_API_KEY'] = os.getenv("TAVILY_API_KEY")
 
         # Primary agent
         self.primary_agent_llm = app_config["primary_agent"]["llm"]
