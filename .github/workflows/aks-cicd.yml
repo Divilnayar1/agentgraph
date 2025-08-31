@@ -61,6 +61,15 @@ jobs:
           # Replace placeholders and apply
           sed "s|<ACR_LOGIN_SERVER>|$ACR_LOGIN_SERVER|g; s|\${IMAGE_TAG}|$IMAGE_TAG|g" k8s/deployment.yaml | kubectl apply -f -
           kubectl apply -f k8s/service.yaml
+      # 🔑 Create or update Kubernetes secret from GitHub secrets
+      - name: Create Kubernetes secrets
+        run: |
+          kubectl create secret generic agentgraph-secrets \
+            -n agentgraph \
+            --from-literal=OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+            --from-literal=TAVILY_API_KEY=${{ secrets.TAVILY_API_KEY }} \
+            --from-literal=LANGCHAIN_API_KEY=${{ secrets.LANGCHAIN_API_KEY }} \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       # Optional: rollout status
       - name: Wait for rollout
