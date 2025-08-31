@@ -7,8 +7,8 @@ with gr.Blocks() as demo:
     with gr.Tabs():
         with gr.TabItem("AgentGraph"):
             ##############
-            # First ROW:
-            ##############
+            # First ROW: 
+            ###############
             with gr.Row() as row_one:
                 chatbot = gr.Chatbot(
                     [],
