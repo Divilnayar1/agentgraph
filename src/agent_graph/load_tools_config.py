@@ -15,7 +15,6 @@ class LoadToolsConfig:
         # Set environment variables
         print(os.getenv("OPEN_AI_API_KEY"))
 
-        
         openai_key = os.getenv("OPENAI_API_KEY")
         if not openai_key:
             raise ValueError("OPENAI_API_KEY environment variable is not set")
