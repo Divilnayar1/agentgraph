@@ -65,9 +65,6 @@ jobs:
           sed "s|<ACR_LOGIN_SERVER>|$ACR_LOGIN_SERVER|g; s|\${IMAGE_TAG}|$IMAGE_TAG|g" k8s/deployment.yaml | kubectl apply -f -
           kubectl apply -f k8s/service.yaml
 
-      - name: Use OpenAI API Key
-        run: |
-          python app.py   # 👈 changed, otherwise just `app.py` won’t execute
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
