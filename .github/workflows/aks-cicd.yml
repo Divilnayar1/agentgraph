@@ -70,6 +70,12 @@ jobs:
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
           LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
 
+      - name: Debug Pods
+        run: kubectl get pods -n agentgraph -o wide
+
+      - name: Pod Logs
+        run: kubectl logs deploy/agentgraph-deployment -n agentgraph --tail=50
+        
       # Optional: rollout status
       - name: Wait for rollout
         run: kubectl rollout status deploy/agentgraph-deployment -n agentgraph
