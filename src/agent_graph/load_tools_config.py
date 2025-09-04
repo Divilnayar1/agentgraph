@@ -12,6 +12,7 @@ class LoadToolsConfig:
         with open(here("configs/tools_config.yml")) as cfg:
             app_config = yaml.load(cfg, Loader=yaml.FullLoader)
         print("helloman")
+        
         # Set environment variables
         print(os.getenv("OPEN_AI_API_KEY"))
 
