@@ -15,12 +15,7 @@ jobs:
       contents: read
       id-token: write
 
-    env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
-      LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
-
-    steps:
+      steps:
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -69,7 +64,13 @@ jobs:
           # Replace placeholders and apply
           sed "s|<ACR_LOGIN_SERVER>|$ACR_LOGIN_SERVER|g; s|\${IMAGE_TAG}|$IMAGE_TAG|g" k8s/deployment.yaml | kubectl apply -f -
           kubectl apply -f k8s/service.yaml
-      
+      - name: Use OpenAI API Key
+        run: |
+          app.py
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
       # Optional: rollout status
       - name: Wait for rollout
         run: kubectl rollout status deploy/agentgraph-deployment -n agentgraph
