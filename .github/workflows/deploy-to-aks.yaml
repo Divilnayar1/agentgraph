@@ -50,9 +50,8 @@ jobs:
     # 6. Replace placeholder in deployment.yaml with the new image tag
     - name: Deploy to AKS
       run: |
-        # Use sed to find and replace the image name in the deployment.yaml
-        sed -i 's|image: .*|image: $AZURE_CONTAINER_REGISTRY.azurecr.io/$CONTAINER_NAME:${{ github.sha }}|' $DEPLOYMENT_FILE
-        # Apply the Kubernetes manifests
+        # This sed command should replace the placeholder image name
+        sed -i 's|image: placeholder-image-name|image: $AZURE_CONTAINER_REGISTRY.azurecr.io/$CONTAINER_NAME:${{ github.sha }}|' $DEPLOYMENT_FILE
         kubectl apply -f k8s/
       env:
         # Pass the image name for the sed command
