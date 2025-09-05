@@ -1,0 +1,63 @@
+name: Build and Deploy to AKS
+
+on:
+  push:
+    branches: [ main ] # Trigger on push to main branch
+
+env:
+  AZURE_CONTAINER_REGISTRY: "agentgraph" # Replace with your ACR name
+  CONTAINER_NAME: "rag-gradio-app"
+  CLUSTER_NAME: "agentgraph"     # Replace with your AKS name
+  CLUSTER_RESOURCE_GROUP: "Agentbot" # Replace with your RG name
+  DEPLOYMENT_FILE: "k8s/deployment.yaml" 
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # This is required for requesting the JWT from GitHub OIDC
+
+    steps:
+    # 1. Checkout the code
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 2. Log in to Azure using OIDC (Recommended, no password secrets)
+    - name: Azure login
+      uses: azure/login@v1
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    # 3. Log in to ACR
+    - name: Login to ACR
+      run: |
+        az acr login --name $AZURE_CONTAINER_REGISTRY
+
+    # 4. Build and push the Docker image to ACR
+    - name: Build and push Docker image
+      run: |
+        docker build -t $AZURE_CONTAINER_REGISTRY.azurecr.io/$CONTAINER_NAME:${{ github.sha }} .
+        docker push $AZURE_CONTAINER_REGISTRY.azurecr.io/$CONTAINER_NAME:${{ github.sha }}
+
+    # 5. Get AKS credentials
+    - name: Get AKS credentials
+      run: |
+        az aks get-credentials --resource-group $CLUSTER_RESOURCE_GROUP --name $CLUSTER_NAME --overwrite-existing
+
+    # 6. Replace placeholder in deployment.yaml with the new image tag
+    - name: Deploy to AKS
+      run: |
+        # Use sed to find and replace the image name in the deployment.yaml
+        sed -i 's|image: .*|image: $AZURE_CONTAINER_REGISTRY.azurecr.io/$CONTAINER_NAME:${{ github.sha }}|' $DEPLOYMENT_FILE
+        # Apply the Kubernetes manifests
+        kubectl apply -f k8s/
+      env:
+        # Pass the image name for the sed command
+        IMAGE_NAME: $AZURE_CONTAINER_REGISTRY.azurecr.io/$CONTAINER_NAME:${{ github.sha }}
+
+    # 7. (Optional) Check rollout status
+    - name: Check rollout status
+      run: kubectl rollout status deployment/rag-gradio-app

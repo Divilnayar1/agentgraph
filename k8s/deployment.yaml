@@ -1,74 +1,50 @@
-name: Build & Deploy to AKS
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rag-gradio-app
+  namespace: default # or a specific namespace you create
+spec:
+  replicas: 1 # Start with one replica
+  selector:
+    matchLabels:
+      app: rag-gradio-app
+  template:
+    metadata:
+      labels:
+        app: rag-gradio-app
+    spec:
+      containers:
+      - name: rag-app
+        image: # Will be filled in by GitHub Actions workflow
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 7860
+        env:
+          # CRITICAL: Pass secrets as environment variables.
+          # These values will come from the Kubernetes Secret.
+          - name: OPENAI_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: rag-secrets
+                key: openai-api-key
+          - name: TAVILY_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: rag-secrets
+                key: tavily-api-key
 
-on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch: {}
-
-env:
-  IMAGE_NAME: agentgraph
-  NAMESPACE: agentgraph # Define namespace as an environment variable
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }} # Ensure SP has 'AcrPush' & 'Azure Kubernetes Service Contributor' roles
-
-      - name: Set short image tag
-        id: vars
-        run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-
-      - name: Login to ACR
-        run: az acr login --name ${{ secrets.ACR_LOGIN_SERVER }} # Uses the Azure CLI context from login
-
-      - name: Build & Push Image
-        run: |
-          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.TAG }} .
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.TAG }}
-
-      - name: Set AKS context
-        uses: azure/aks-set-context@v3
-        with:
-          resource-group: ${{ secrets.AKS_RESOURCE_GROUP }}
-          cluster-name: ${{ secrets.AKS_CLUSTER_NAME }}
-
-      - name: Create namespace (if required)
-        run: kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
-
-      - name: Create/Update Kubernetes Secrets
-        run: | 
-          # Example: Create a secret from GitHub Secrets
-          kubectl create secret generic app-secrets \
-            --namespace ${{ env.NAMESPACE }} \
-            --from-literal=openai-api-key="${{ secrets.OPENAI_API_KEY }}" \
-            --dry-run=client -o yaml | kubectl apply -f -
-
-      - name: Deploy Application
-        run: |
-          # Export variables for sed
-          export FULL_IMAGE_PATH="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.TAG }}"
-          # Replace the placeholder in deployment.yaml and apply it
-          sed "s|{{IMAGE_PLACEHOLDER}}|$FULL_IMAGE_PATH|g" k8s/deployment.yaml | kubectl apply -f -
-          kubectl apply -f k8s/service.yaml
-
-      - name: Wait for rollout
-        run: kubectl rollout status deployment/agentgraph-deployment --namespace ${{ env.NAMESPACE }} --timeout=90s
-
-      - name: Debug Pods
-        if: failure()
-        run: kubectl get pods --namespace ${{ env.NAMESPACE }} -o wide
-
-      - name: Pod Logs
-        if: failure()
-        run: kubectl logs --namespace ${{ env.NAMESPACE }} -l app=agentgraph --tail=50 --all-containers=true
+          - name: LANGCHAIN_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: rag-secrets
+                key: langchain-api-key
+          # Add any other configs (e.g., index name) here or in your app code
+          # - name: PINECONE_INDEX_NAME
+          #   value: "my-index"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"

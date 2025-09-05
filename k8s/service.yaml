@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: agentgraph-service
-  namespace: agentgraph
+  name: rag-gradio-service
+  namespace: default
 spec:
   selector:
-    app: agentgraph
+    app: rag-gradio-app
   ports:
     - protocol: TCP
-      port: 80       # external port
-      targetPort: 7860   # matches Gradio inside the pod
-  type: LoadBalancer
+      port: 80
+      targetPort: 7860 # Maps to the container port
+  type: ClusterIP # Good for internal traffic. We'll use Ingress for external.
