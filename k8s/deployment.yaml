@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: rag-app
-        image: # Will be filled in by GitHub Actions workflow
+        image: agentgraph.azurecr.io/rag-gradio-app:latest # Will be filled in by GitHub Actions workflow
         imagePullPolicy: Always
         ports:
         - containerPort: 7860
