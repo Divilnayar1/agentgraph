@@ -6,7 +6,7 @@ on:
 
 env:
   AZURE_CONTAINER_REGISTRY: "agentgraph" # Replace with your ACR name
-  CONTAINER_NAME: "agentgraph"
+  CONTAINER_NAME: "rag-gradio-app"
   CLUSTER_NAME: "agentgraph"     # Replace with your AKS name
   CLUSTER_RESOURCE_GROUP: "Agentbot" # Replace with your RG name
   DEPLOYMENT_FILE: "k8s/deployment.yaml" 
