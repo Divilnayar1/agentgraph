@@ -1,6 +1,7 @@
 import os
 from pyprojroot import here
 
+
 def create_directory(directory_path: str) -> None:
     """
     Create a directory if it does not exist.
